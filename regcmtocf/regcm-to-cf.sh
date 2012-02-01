@@ -1,18 +1,9 @@
 #!/bin/bash -x
 
-numvars=4
-varsin[1]='TA'
-varsout[1]='tas'
-varsin[2]='RT'
-varsout[2]='pr'
-varsin[3]='TAMAX'
-varsout[3]='tasmax'
-varsin[4]='TAMIN'
-varsout[4]='tasmin'
-
 year1=1990
-year2=2002
+year2=2008
 timespec=monavg
+realm=SRF
 domainname='AFR-44'
 gcmodel='ERAINT'
 cmip5experiment='historical'
@@ -22,8 +13,10 @@ rcmversion='v1'
 experiment='evaluation'
 today=`date '+%Y-%m-%d-T%H:%M:%SZ'`
 domainfile=cordex-africa-domain-cuni-3.nc
+prefixin="$realm-cordex-africa-grell-$year1-$year2"
 
 ln -sf globalattributes-${experiment}.txt globalattributes.txt
+ln -sf vardefs-${realm}.txt vardefs.txt
 
 if [ $timespec == 'monavg' -o $timespec == 'seasavg' ]; then
     numperiods=3
@@ -50,19 +43,20 @@ elif [ $timespec == 'dayavg' ]; then
     cell_methods='time: mean'
 fi
 
-prefixin="SRF-grell-$year1-$year2.selvar"
-
 echo "@@@ cdo splitvar processing"
 cdo -r setreftime,1949-12-01,00:00:00,days -settaxis,$year1-01-01,00:00,$cdotdef $prefixin.$timespec.nc $prefixin.$timespec-2.nc
 cdo splitvar $prefixin.$timespec-2.nc $prefixin.$timespec.
-for((i=1;i<=$numvars;i++)); do
-    varin=${varsin[$i]}
-    ./correct-time-${timespec}.py $prefixin.$timespec.$varin.nc $year1 $year2
-done
 
-for((i=1;i<=$numvars;i++)); do
-    varin=${varsin[$i]}
-    varout=${varsout[$i]}
+while read vardef; do
+    varin=`echo $vardef |cut -d: -f1`
+    varout=`echo $vardef |cut -d: -f2`
+    long_name=`echo $vardef |cut -d: -f3`
+    standard_name=`echo $vardef |cut -d: -f4`
+    units=`echo $vardef |cut -d: -f5`
+
+    echo "@@@ apply time axis correction"
+    ./correct-time-${timespec}.py $prefixin.$timespec.$varin.nc $year1 $year2
+
     echo "@@@ processing $varin -> $varout"
     ncrename -v $varin,$varout $prefixin.$timespec.$varin.nc
     while read atline; do
@@ -70,12 +64,7 @@ for((i=1;i<=$numvars;i++)); do
         attval=`echo $atline |cut -d: -f2 |sed "s/{TODAY}/$today/; s/{FREQUENCY}/$outfrequency/"`
 
         ncatted -a ${attname},global,o,c,"$attval" $prefixin.$timespec.$varin.nc
-    done <globalattributes.txt
-
-    vardef=`grep "^$varin:" vardefs.txt`
-    long_name=`echo $vardef |cut -d: -f3`
-    standard_name=`echo $vardef |cut -d: -f4`
-    units=`echo $vardef |cut -d: -f5`
+    done <globalattributes.txt # end while read atline
 
     ncatted -a long_name,$varout,o,c,"$long_name" $prefixin.$timespec.$varin.nc
     ncatted -a standard_name,$varout,o,c,"$standard_name" $prefixin.$timespec.$varin.nc
@@ -89,11 +78,10 @@ for((i=1;i<=$numvars;i++)); do
 
     for((peri=1;peri<=$numperiods;peri++)); do
         echo "@@@ processing period $peri"
-#        cdo -r setreftime,1949-12-01,00:00:00,days -settaxis,${taxis[$peri]} -seldate,${perioddates[$peri]} $prefixin.$timespec.$varin.nc $prefixin.$timespec.$varin.per_$peri.nc
         cdo seldate,${perioddates[$peri]} $prefixin.$timespec.$varin.nc $prefixin.$timespec.$varin.per_$peri.nc
         ncrename -d x,lon -d y,lat -d gsize,bnds $prefixin.$timespec.$varin.per_$peri.nc
         ncatted -a bounds,time,c,c,"time_bnds" $prefixin.$timespec.$varin.per_$peri.nc
         ncatted -h -a history,global,d,, $prefixin.$timespec.$varin.per_$peri.nc
         mv $prefixin.$timespec.$varin.per_$peri.nc ${varout}_${domainname}_${gcmodel}_${cmip5experiment}_${cmip5ensemblemember}_${rcmodel}_${rcmversion}_${outfrequency}_${starttimes[$peri]}_${endtimes[$peri]}.nc
-    done
-done
+    done # end for((peri...
+done <vardefs.txt # end while read vardef
