@@ -1,0 +1,4 @@
+TA:tas:Near-Surface Air Temperature:air_temperature:K
+TAMAX:tasmax:Daily Maximum Near-Surface Air Temperature:air_temperature:K
+TAMIN:tasmin:Daily Minimum Near-Surface Air Temperature:air_temperature:K
+RT:pr:Precipitation:precipitation_flux:kg m-2 s-1
