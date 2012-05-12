@@ -16,7 +16,7 @@ domainfile=cordex-africa-domain-cuni-3.nc
 prefixin="$realm-cordex-africa-grell-$year1-$year2"
 
 ln -sf globalattributes-${experiment}.txt globalattributes.txt
-ln -sf vardefs-${realm}.txt vardefs.txt
+ln -sf vardefs-${realm}-${timespec}.txt vardefs.txt
 
 if [ $timespec == 'monavg' -o $timespec == 'seasavg' ]; then
     numperiods=3
@@ -45,7 +45,8 @@ fi
 
 echo "@@@ cdo splitvar processing"
 cdo -r setreftime,1949-12-01,00:00:00,days -settaxis,$year1-01-01,00:00,$cdotdef $prefixin.$timespec.nc $prefixin.$timespec-2.nc
-cdo splitvar $prefixin.$timespec-2.nc $prefixin.$timespec.
+getvars=`cut -d: -f1 vardefs.txt |paste -sd","`
+cdo splitvar -selname,${getvars} $prefixin.$timespec-2.nc $prefixin.$timespec.
 
 while read vardef; do
     varin=`echo $vardef |cut -d: -f1`
@@ -82,6 +83,6 @@ while read vardef; do
         ncrename -d x,lon -d y,lat -d gsize,bnds $prefixin.$timespec.$varin.per_$peri.nc
         ncatted -a bounds,time,c,c,"time_bnds" $prefixin.$timespec.$varin.per_$peri.nc
         ncatted -h -a history,global,d,, $prefixin.$timespec.$varin.per_$peri.nc
-        mv $prefixin.$timespec.$varin.per_$peri.nc ${varout}_${domainname}_${gcmodel}_${cmip5experiment}_${cmip5ensemblemember}_${rcmodel}_${rcmversion}_${outfrequency}_${starttimes[$peri]}_${endtimes[$peri]}.nc
+        mv $prefixin.$timespec.$varin.per_$peri.nc ${varout}_${domainname}_${gcmodel}_${cmip5experiment}_${cmip5ensemblemember}_${rcmodel}_${rcmversion}_${outfrequency}_${starttimes[$peri]}-${endtimes[$peri]}.nc
     done # end for((peri...
 done <vardefs.txt # end while read vardef
