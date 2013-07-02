@@ -1,21 +1,28 @@
 #!/usr/bin/env python
 
+import sys
 from subprocess import call
 
-experiment='Euro-CORDEX'
+experiment='Euro-CORDEX-CMIP5'
 realm='STS'
-variables = ('tas','pr')
-infilename_pattern='%s_%s.%%4d%%02d0100.%%s.nc' % (experiment, realm)
+variables = ('tas','pr','tasmin','tasmax')
+infilename_pattern='tmp_%s_%s.%%4d%%02d0100.%%s.nc' % (experiment, realm)
 mergedfilename_pattern = '%s_EUR-44_CNRM-CM5_historical_r1i1p1_CUNI-RegCM4-2_day_%4d010100_%4d123100.nc'
 dosplitvar=True
 timespan='daily'
-startyear=1989
-endyear=2008
+startyear=1960
+endyear=2005
 cdo_exec = 'cdo'
+
+if len(sys.argv)>1:
+    infilename_pattern = sys.argv[1]
 
 timeperiods = []
 if timespan=='daily':
     startyear_dummy = startyear/5*5+1
+    if startyear < startyear_dummy:
+        timeperiods.append((startyear, startyear_dummy-1))
+
     for i in range(startyear_dummy, endyear, 5):
         if i < startyear:
             y1 = startyear
@@ -38,6 +45,8 @@ for var in variables:
             filelist.extend([infilename_pattern % (y,m,var) for m in range(1,13)])
 
         mergedfilename = mergedfilename_pattern % (var,y1,y2)
-        merge_command = cdo_exec + ' mergetime %s %s' % (" ".join(filelist), mergedfilename)
+        merge_command = cdo_exec + ' mergetime %s t.%s' % (" ".join(filelist), mergedfilename)
         print merge_command
 #        print call(merge_command, shell=True)
+        time_correct_command = cdo_exec + ' setreftime,1949-12-01,00:00 -settaxis,%d-01-01,12:00,1day t.%s %s' % (y1, mergedfilename, mergedfilename)
+        print time_correct_command
