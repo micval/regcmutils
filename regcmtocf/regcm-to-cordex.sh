@@ -1,24 +1,30 @@
-#!/bin/bash
+#!/bin/bash -x
 
-year1=1989
-year2=2008
+year1=1960
+year2=2005
 timespec=dayavg
-realm=SRF
+realm=STS
 domainname='EUR-44'
 gcmodel='ERAINT'
 cmip5experiment='historical'
 cmip5ensemblemember='r1i1p1'
 rcmodel='CUNI-RegCM'
 rcmversion='v1'
-experiment='evaluation'
+experiment='historical'
 today="2012-12-11-T23:15:09Z"
+bufferzonewidth=12
 
 outfrequency='day'
 cell_methods='time: mean'
 
 docorrectatt=1
 docorrectvar=1
-dotimesplit=1
+dotimesplit=0
+dotimemerge=1
+dobufferzonecut=1
+
+xdimname='x'
+ydimname='y'
 
 decades=3
 dec_start[0]=1989
@@ -28,8 +34,21 @@ dec_end[1]=2000
 dec_start[2]=2001
 dec_end[2]=2008
 
+if [ ! -f vardefs.txt ]; then
+    ln -s vardefs-$realm-$timespec.txt vardefs.txt
+fi
+
 for file in $@; do
-    ncks -d x,12,129 -d y,12,129 $file tmp_$file
+    if [ "$dobufferzonecut" == "1" ]; then
+        jx=`./getncdim.py $file $xdimname`
+        iy=`./getncdim.py $file $ydimname`
+        startx=$bufferzonewidth
+        starty=$bufferzonewidth
+
+        endx=`expr $jx - $bufferzonewidth - 1`
+        endy=`expr $iy - $bufferzonewidth - 1`
+        ncks -d $xdimname,$startx,$endx -d $ydimname,$starty,$endy $file tmp_$file
+    fi
     variable=`echo $file |cut -d. -f3`
 
     if [ "$docorrectvar" == "1" ]; then
@@ -44,7 +63,7 @@ for file in $@; do
         ncatted -a long_name,$varout,o,c,"$long_name" tmp_$file
         ncatted -a standard_name,$varout,o,c,"$standard_name" tmp_$file
         ncatted -a units,$varout,o,c,"$units" tmp_$file
-        ncatted -a cell_methods,$varout,o,c,"$cell_methods" tmp_$file
+#        ncatted -a cell_methods,$varout,o,c,"$cell_methods" tmp_$file
     fi
 
     if [ "$docorrectatt" == "1" ]; then
@@ -67,4 +86,12 @@ for file in $@; do
             cdo setreftime,1949-12-01,00:00 -settaxis,${dec_start[$i]}-01-01,12:00,1day -selyear,$my_years tmp_$file ${varout}_${domainname}_${gcmodel}_${cmip5experiment}_${cmip5ensemblemember}_${rcmodel}_${rcmversion}_${outfrequency}_${dec_start[$i]}0101-${dec_end[$i]}1231.nc
         done
     fi
+
+    if [ "$docorrectvar" == "1" ]; then
+        mv tmp_$file `echo tmp_$file | sed "s/$varin/$varout/"`
+    fi
 done
+
+if [ "$dotimemerge" == "1" ]; then
+    ./domerge.py
+fi

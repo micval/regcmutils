@@ -47,6 +47,7 @@ for var in variables:
         mergedfilename = mergedfilename_pattern % (var,y1,y2)
         merge_command = cdo_exec + ' mergetime %s t.%s' % (" ".join(filelist), mergedfilename)
         print merge_command
-#        print call(merge_command, shell=True)
+        print call(merge_command, shell=True)
         time_correct_command = cdo_exec + ' setreftime,1949-12-01,00:00 -settaxis,%d-01-01,12:00,1day t.%s %s' % (y1, mergedfilename, mergedfilename)
         print time_correct_command
+        print call(time_correct_command, shell=True)

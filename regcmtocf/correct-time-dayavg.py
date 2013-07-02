@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-from Scientific.IO.NetCDF import NetCDFFile as ncf
+#from Scientific.IO.NetCDF import NetCDFFile as ncf
+from netCDF4 import Dataset as ncf
 import sys
 from datetime import date
 from calendar import monthrange
@@ -20,30 +21,28 @@ tdata = []
 
 for y in range(year1,year2+1):
     for m in range(1,13):
-        mp = m
-        yp = y
-
         daysinmonth=monthrange(y,m)[1]
         for d in range(1,daysinmonth+1):
+            mp = m
+            yp = y
             dp = d+1
             if dp>daysinmonth:
                 dp = 1
-                mp = (m+1)%12
+                mp += 1
 
-            if mp == 0:
-                mp = 12
-
-            if mp == 1:
+            if mp == 13:
+                mp = 1
                 yp += 1
 
-            _date1 = date(y,m,1)
+            _date1 = date(y,m,d)
             _date2 = date(yp,mp,dp)
 
             tbdata.append([(_date1-refdate).days, (_date2-refdate).days])
             tdata.append((_date1-refdate).days+(_date2-_date1).days/2.)
 
-tb.assignValue(tbdata)
-t.assignValue(tdata)
+tb[:] = tbdata
+t[:] = tdata
 
-ff.flush()
+#ff.flush()
+ff.sync()
 ff.close()
