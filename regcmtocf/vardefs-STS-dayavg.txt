@@ -7,3 +7,4 @@ sina:rsds:Surface Downwelling Shortwave Radiation:surface_downwelling_shortwave_
 slp:psl:Sea Level Pressure:air_pressure_at_sea_level:Pa::
 sena:hfss:Surface Upward Sensible Heat Flux:surface_upward_sensible_heat_flux:W m-2:Sensible heat flux [W m-2]
 evp:hfls:Surface Upward Latent Heat Flux:surface_upward_latent_heat_flux:W m-2:
+scv:snw:Surface Snow Amount:surface_snow_amount:kg m-2:
