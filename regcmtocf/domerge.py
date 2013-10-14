@@ -10,8 +10,8 @@ infilename_pattern='tmp_%s_%s.%%4d%%02d0100.%%s.nc' % (experiment, realm)
 mergedfilename_pattern = '%s_EUR-44_CNRM-CM5_historical_r1i1p1_CUNI-RegCM4-2_day_%4d010100_%4d123100.nc'
 dosplitvar=True
 timespan='daily'
-startyear=1960
-endyear=2005
+startyear=2006
+endyear=2100
 cdo_exec = 'cdo'
 
 if len(sys.argv)>1:
@@ -48,6 +48,11 @@ for var in variables:
         merge_command = cdo_exec + ' mergetime %s t.%s' % (" ".join(filelist), mergedfilename)
         print merge_command
         print call(merge_command, shell=True)
+
         time_correct_command = cdo_exec + ' setreftime,1949-12-01,00:00 -settaxis,%d-01-01,12:00,1day t.%s %s' % (y1, mergedfilename, mergedfilename)
         print time_correct_command
         print call(time_correct_command, shell=True)
+
+        timebnds_correct_command = './correct-time-dayavg.py %s %d %d' % (mergedfilename,y1,y2)
+        print timebnds_correct_command
+        print call(timebnds_correct_command, shell=True)
