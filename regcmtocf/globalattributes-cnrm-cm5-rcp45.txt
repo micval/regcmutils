@@ -13,6 +13,6 @@ driving_experiment_name:historical
 frequency:{FREQUENCY}
 model_id:CUNI-REGCM4-2
 project_id:CORDEX
-CORDEX_domain:EUR44
+CORDEX_domain:EUR-44
 RCM_version_id:v1
 product:output

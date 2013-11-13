@@ -1,21 +1,30 @@
-#!/bin/bash -x
+#!/bin/bash
+
+declare -A globalattr
+while read line ; do
+    att=`echo $line |cut -d: -f1`
+    val=`echo $line |cut -d: -f2`
+
+    globalattr[$att]="$val"
+done < globalattributes.txt
 
 year1=1960
 year2=2005
 timespec=dayavg
 realm=STS
-domainname='EUR-44'
-gcmodel='ERAINT'
-cmip5experiment='historical'
-cmip5ensemblemember='r1i1p1'
-rcmodel='CUNI-RegCM'
-rcmversion='v1'
-experiment='historical'
-today="2012-12-11-T23:15:09Z"
+domainname=$globalattr[CORDEX_domain]
+gcmodel=$globalattr[driving_model_id]
+cmip5experiment=$globalattr[experiment_id]
+cmip5ensemblemember=$globalattr[driving_model_ensemble_member]
+rcmodel=$globalattr[model_id]
+rcmversion=$globalattr[RCM_version_id]
+experiment=$globalattr[experiment_id]
+today=`date`
 bufferzonewidth=12
 
 outfrequency='day'
 cell_methods='time: mean'
+outprefix='esgf'
 
 docorrectatt=1
 docorrectvar=1
