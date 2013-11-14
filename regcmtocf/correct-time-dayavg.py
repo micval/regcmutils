@@ -15,6 +15,11 @@ ff = ncf(sys.argv[1],'a')
 ff.createDimension('bnds',2)
 tb = ff.createVariable('time_bnds','d',('time','bnds'))
 t = ff.variables['time']
+tb.units=t.units
+tb.calendar=t.calendar
+t.bounds="time_bnds"
+t.axis="T"
+t.long_name="time"
 
 tbdata = []
 tdata = []
