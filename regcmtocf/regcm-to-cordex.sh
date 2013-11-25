@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 declare -A globalattr
 while read line ; do
@@ -26,15 +26,15 @@ outfrequency='day'
 cell_methods='time: mean'
 outprefix='esgf'
 
-docorrectatt=0
-docorrectvar=0
+dobufferzonecut=1
+docorrectatt=1
+docorrectvar=1
 docorrectdim=1
 dotimesplit=0
 dotimemerge=1
-dobufferzonecut=0
 
-xdimname='x'
-ydimname='y'
+xdimname='jx'
+ydimname='iy'
 
 decades=3
 dec_start[0]=1989
@@ -69,12 +69,18 @@ for infile in $@; do
         long_name=`echo $vardef |cut -d: -f3`
         standard_name=`echo $vardef |cut -d: -f4`
         units=`echo $vardef |cut -d: -f5`
+        cell_methods=`echo $vardef |cut -d: -f7`
+        postproc=`echo $vardef |cut -d: -f8`
 
-        ncrename -v $varin,$varout tmp_$file
-        ncatted -a long_name,$varout,o,c,"$long_name" tmp_$file
-        ncatted -a standard_name,$varout,o,c,"$standard_name" tmp_$file
-        ncatted -a units,$varout,o,c,"$units" tmp_$file
-#        ncatted -a cell_methods,$varout,o,c,"$cell_methods" tmp_$file
+        if [ "$varin" != "$varout" ]; then
+            ncrename -v $varin,$varout tmp_$file
+        fi
+
+        ncatted -a long_name,$varout,o,c,"$long_name" -a standard_name,$varout,o,c,"$standard_name" -a units,$varout,o,c,"$units" tmp_$file
+        if [ "$postproc" != "" ]; then
+            cdo $postproc tmp_$file tmp2_$file
+            mv tmp2_$file tmp_$file
+        fi
     fi
 
     if [ "$docorrectatt" == "1" ]; then
@@ -99,15 +105,16 @@ for infile in $@; do
     fi
 
     if [ "$docorrectdim" == "1" ]; then
-        ncrename -v xlon,lon -v xlat,lat -d x,xc -d y,yc tmp_$file
+        ncrename -v xlon,lon -v xlat,lat -d $xdimname,xc -d $ydimname,yc -v rcm_map,Lambert_conformal tmp_$file
         ncatted -a coordinates,$varout,o,c,"lon lat" tmp_$file
         if [ `./checkncdim.py tmp_$file m2` == "True" ]; then
+            ./correct-m2-value.py tmp_$file
             ncrename -v m2,height -d m2,height tmp_$file
             ncatted -a long_name,m2,o,c,"height" tmp_$file
         fi
     fi
 
-    if [ "$docorrectvar" == "1" ]; then
+    if [ "$docorrectvar" == "1" -a "$varin" != "$varout" ]; then
         mv tmp_$file `echo tmp_$file | sed "s/$varin/$varout/"`
     fi
 done
