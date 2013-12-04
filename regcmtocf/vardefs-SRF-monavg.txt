@@ -1,15 +1,22 @@
-TA:tas:Near-Surface Air Temperature:air_temperature:K:Anemom Temp [K]:
-TAMAX:tasmax:Daily Maximum Near-Surface Air Temperature:air_temperature:K:Max Anemom Temp [K]:
-TAMIN:tasmin:Daily Minimum Near-Surface Air Temperature:air_temperature:K:Min Anemom Temp [K]:
-QA:huss:Near-Surface Specific Humidity:huss:specific_humidity:1:Anemom Spec Humidity [kg/kg]:
-RT:pr:Precipitation:precipitation_flux:kg m-2 s-1:Total Precipitation [mm/day]:RT/86400
-W10MX:sfcWindmax:Maximum 10-metre Wind Speed:wind_speed:m s-1:Max 10m Wind Speed [m/s]:
-UA:uas:Eastward Near-Surface Wind Velocity:eastward_wind:m s-1:Anemom Zonal Winds [m/s]:
-VA:vas:Northward Near-Surface Wind Velocity:northward_wind:m s-1:Anemom Merid Winds [m/s]:
-SMT:mrso:Total Soil Moisture Content:soil_moisture_content:kg m-2::SMU+SMR
-RNFS:mrros:Surface Runoff:surface_runoff_flux:kg m-2 s-1:Surface Runoff [mm/day]:RNFS/86400
+q2m:huss:Near-Surface Specific Humidity:huss:specific_humidity:1:Anemom Spec Humidity [kg/kg]:
+u10m:uas:Eastward Near-Surface Wind Velocity:eastward_wind:m s-1:Anemom Zonal Winds [m/s]:
+v10m:vas:Northward Near-Surface Wind Velocity:northward_wind:m s-1:Anemom Merid Winds [m/s]:
+runoff:mrros:Surface Runoff:surface_runoff_flux:kg m-2 s-1:Surface Runoff [mm/day]:runoff/86400
 SNOW:snw:Snow Amount:surface_snow_amount:kg m-2:Snow Depth [mm H2O]:
 LWU:rlus:Surface Upwelling Shortwave Radiation:surface_upwelling_shortwave_flux_in_air:W m-2:Upwelling Longwave [W/m2]:LWN+LWD
 SWU:rsus:Surface Upwelling Longwave Radiation:surface_upwelling_longwave_flux_in_air:W m-2:Upwelling Solar Absorbed [W/m2]:SWN+SWI
-LWD:rlds:Surface Downwelling Longwave Radiation:surface_downwelling_longwave_flux_in_air:W m-2:Downward Longwave [W/m2]:
-SWI:rsds:Surface Downwelling Shortwave Radiation:surface_downwelling_shortwave_flux_in_air:W m-2:Solar Incident [W/m2]:
+fld:rlds:Surface Downwelling Longwave Radiation:surface_downwelling_longwave_flux_in_air:W m-2:Downward Longwave [W/m2]:
+sina:rsds:Surface Downwelling Shortwave Radiation:surface_downwelling_shortwave_flux_in_air:W m-2:Solar Incident [W/m2]:
+SMT:mrso:Total Soil Moisture Content:soil_moisture_content:kg m-2::SMU+SMR
+  -6  uvdrag        Surface drag stress [1]
+  -7  tg            Ground temperature [K]
+  -8  tlef          Foliage temperature [K]
+ -11  smw           Moisture content [kg m-2]
+ -13  evp           Total evapotranspiration [kg m-2 day-1]
+ -15  scv           Snow precipitation [kg m-2 day-1]
+ -16  sena          Sensible heat flux [W m-2]
+ -17  flw           Net infrared energy flux [W m-2]
+ -18  fsw           Net solar absorbed energy flux [W m-2]
+ -20  sina          Incident solar energy flux [W m-2]
+ -21  prcv          Convective precipitation [kg m-2 day-1]
+ -22  zpbl          PBL layer thickness [m]
