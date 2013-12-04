@@ -1,0 +1,9 @@
+u:ua:long_name:standard_name:m s-1:U component (westerly) of wind [m s-1]:mean:
+v:va:long_name:standard_name:m s-1:V component (southerly) of wind [m s-1]:mean:
+omega         Pressure velocity [hPa s-1]
+t             Temperature [K]
+qv            Water vapor mixing ratio [kg kg-1]
+qc            Cloud water mixing ratio [kg kg-1]
+tpr           Total daily precipitation rate [kg m-2 day-1]
+tgb           Lower groud temperature [K]
+swt           Total soil water [kg m-2]

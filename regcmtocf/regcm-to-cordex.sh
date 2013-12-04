@@ -1,30 +1,40 @@
 #!/bin/bash -x
 
-year1=1960
-year2=2005
+declare -A globalattr
+while read line ; do
+    att=`echo $line |cut -d: -f1`
+    val=`echo $line |cut -d: -f2`
+
+    globalattr[$att]="$val"
+done < globalattributes.txt
+
+year1=1990
+year2=2008
 timespec=dayavg
 realm=STS
-domainname='EUR-44'
-gcmodel='ECMWF-ERAINT'
-cmip5experiment='historical'
-cmip5ensemblemember='r1i1p1'
-rcmodel='CUNI-RegCM4-2'
-rcmversion='v1'
-experiment='historical'
-today="2012-12-11-T23:15:09Z"
+domainname=${globalattr[CORDEX_domain]}
+gcmodel=${globalattr[driving_model_id]}
+cmip5experiment=${globalattr[experiment_id]}
+cmip5ensemblemember=${globalattr[driving_model_ensemble_member]}
+rcmodel=${globalattr[model_id]}
+rcmversion=${globalattr[rcm_version_id]}
+experiment=${globalattr[experiment_id]}
+today=`date`
 bufferzonewidth=12
 
 outfrequency='day'
 cell_methods='time: mean'
+outprefix='esgf'
 
+dobufferzonecut=1
 docorrectatt=1
 docorrectvar=1
+docorrectdim=1
 dotimesplit=0
 dotimemerge=1
-dobufferzonecut=1
 
-xdimname='x'
-ydimname='y'
+xdimname='jx'
+ydimname='iy'
 
 decades=3
 dec_start[0]=1989
@@ -38,16 +48,17 @@ if [ ! -f vardefs.txt ]; then
     ln -s vardefs-$realm-$timespec.txt vardefs.txt
 fi
 
-for file in $@; do
+for infile in $@; do
+    file=${infile##*/}
     if [ "$dobufferzonecut" == "1" ]; then
-        jx=`./getncdim.py $file $xdimname`
-        iy=`./getncdim.py $file $ydimname`
+        jx=`./getncdim.py $infile $xdimname`
+        iy=`./getncdim.py $infile $ydimname`
         startx=$bufferzonewidth
         starty=$bufferzonewidth
 
         endx=`expr $jx - $bufferzonewidth - 1`
         endy=`expr $iy - $bufferzonewidth - 1`
-        ncks -d $xdimname,$startx,$endx -d $ydimname,$starty,$endy $file tmp_$file
+        ncks -d $xdimname,$startx,$endx -d $ydimname,$starty,$endy $infile tmp_$file
     fi
     variable=`echo $file |cut -d. -f3`
 
@@ -58,12 +69,18 @@ for file in $@; do
         long_name=`echo $vardef |cut -d: -f3`
         standard_name=`echo $vardef |cut -d: -f4`
         units=`echo $vardef |cut -d: -f5`
+        cell_methods=`echo $vardef |cut -d: -f7`
+        postproc=`echo $vardef |cut -d: -f8`
 
-        ncrename -v $varin,$varout tmp_$file
-        ncatted -a long_name,$varout,o,c,"$long_name" tmp_$file
-        ncatted -a standard_name,$varout,o,c,"$standard_name" tmp_$file
-        ncatted -a units,$varout,o,c,"$units" tmp_$file
-#        ncatted -a cell_methods,$varout,o,c,"$cell_methods" tmp_$file
+        if [ "$varin" != "$varout" ]; then
+            ncrename -v $varin,$varout tmp_$file
+        fi
+
+        ncatted -a long_name,$varout,o,c,"$long_name" -a standard_name,$varout,o,c,"$standard_name" -a units,$varout,o,c,"$units" tmp_$file
+        if [ "$postproc" != "" ]; then
+            cdo $postproc tmp_$file tmp2_$file
+            mv tmp2_$file tmp_$file
+        fi
     fi
 
     if [ "$docorrectatt" == "1" ]; then
@@ -87,11 +104,21 @@ for file in $@; do
         done
     fi
 
-    if [ "$docorrectvar" == "1" ]; then
+    if [ "$docorrectdim" == "1" ]; then
+        ncrename -v xlon,lon -v xlat,lat -d $xdimname,xc -d $ydimname,yc -v rcm_map,Lambert_conformal tmp_$file
+        ncatted -a coordinates,$varout,o,c,"lon lat" tmp_$file
+        if [ `./checkncdim.py tmp_$file m2` == "True" ]; then
+            ./correct-m2-value.py tmp_$file
+            ncrename -v m2,height -d m2,height tmp_$file
+            ncatted -a long_name,m2,o,c,"height" tmp_$file
+        fi
+    fi
+
+    if [ "$docorrectvar" == "1" -a "$varin" != "$varout" ]; then
         mv tmp_$file `echo tmp_$file | sed "s/$varin/$varout/"`
     fi
 done
 
 if [ "$dotimemerge" == "1" ]; then
-    ./domerge.py
+    ./domerge.py -s $year1 -e $year2 --mergedfilename_pattern="%s_${domainname}_${gcmodel}_${experiment}_${cmip5ensemblemember}_${rcmodel}_${rcmversion}_${outfrequency}_%4d0101-%4d1231.nc"
 fi

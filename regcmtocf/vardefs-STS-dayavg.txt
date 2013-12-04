@@ -1,10 +1,7 @@
-t2avg:tas:Near-Surface Air Temperature:air_temperature:K:Anemom Temp [K]:
-t2max:tasmax:Daily Maximum Near-Surface Air Temperature:air_temperature:K:Max Anemom Temp [K]:
-t2min:tasmin:Daily Minimum Near-Surface Air Temperature:air_temperature:K:Min Anemom Temp [K]:
-pcpavg:pr:Precipitation:precipitation_flux:kg m-2 s-1:Total Precipitation [mm/day]:
-fld:rlds:Surface Downwelling Longwave Radiation:surface_downwelling_longwave_flux_in_air:W m-2:Downward Longwave [W/m2]:
-sina:rsds:Surface Downwelling Shortwave Radiation:surface_downwelling_shortwave_flux_in_air:W m-2:Solar Incident [W/m2]:
-slp:psl:Sea Level Pressure:air_pressure_at_sea_level:Pa::
-sena:hfss:Surface Upward Sensible Heat Flux:surface_upward_sensible_heat_flux:W m-2:Sensible heat flux [W m-2]
-evp:hfls:Surface Upward Latent Heat Flux:surface_upward_latent_heat_flux:W m-2:
-scv:snw:Surface Snow Amount:surface_snow_amount:kg m-2:
+t2avg:tas:Near-Surface Air Temperature:air_temperature:K:Anemom Temp [K]:mean:
+t2max:tasmax:Daily Maximum Near-Surface Air Temperature:air_temperature:K:Max Anemom Temp [K]:maximum:
+t2min:tasmin:Daily Minimum Near-Surface Air Temperature:air_temperature:K:Min Anemom Temp [K]:minimum:
+pcpavg:pr:Precipitation:precipitation_flux:kg m-2 s-1:Total Precipitation [mm/day]:mean:
+ps:ps:Surface Air Pressure:surface_air_pressure:Pa:Surface pressure [hPa]:mean:mulc,100
+w10max:spdmax:Maximum Daily 10-Meter Wind Speed:wind_speed:m s-1:Maximum speed of 10m wind [m s-1]:max:
+sund:sund:Sunshine duration:sunshine_duration:s:Duration of sunshine [s]::
