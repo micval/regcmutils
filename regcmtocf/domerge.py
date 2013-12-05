@@ -13,6 +13,7 @@ parser.add_option('-m','--mergedfilename_pattern',dest='mergedfilename_pattern',
 parser.add_option('-t','--timespan',dest='timespan', help='timespan (daily, monthly, seasonal) [default: %default]')
 parser.add_option('-s','--startyear',dest='startyear', help='start year [default: %default]', type='int')
 parser.add_option('-e','--endyear',dest='endyear', help='end year [default: %default]',type='int')
+parser.add_option('-c','--cdo_postproc',dest='cdo_postproc', help='cdo operators to use for postprocessing')
 
 parser.set_defaults(
         experiment=None,
@@ -23,6 +24,7 @@ parser.set_defaults(
         timespan='daily',
         startyear=2006,
         endyear=2100,
+        cdo_postproc='',
 )
 
 cdo_exec = 'cdo'
@@ -63,6 +65,12 @@ for var in options.variables.split():
         merge_command = cdo_exec + ' mergetime %s t.%s' % (" ".join(filelist), mergedfilename)
         print merge_command
         print call(merge_command, shell=True)
+
+        if options.cdo_postproc!='':
+            cdo_postproc_command = '%s %s t.%s tt.%s; mv tt.%s t.%s' % (cdo_exec, options.cdo_postproc, mergedfilename, mergedfilename, mergedfilename, mergedfilename)
+            print cdo_postproc_command
+            print call(cdo_postproc_command, shell=True)
+            print call('rm tt.%s' % mergedfilename, shell=True)
 
         time_correct_command = cdo_exec + ' setreftime,1949-12-01,00:00 -settaxis,%d-01-01,12:00,1day t.%s %s' % (y1, mergedfilename, mergedfilename)
         print time_correct_command
