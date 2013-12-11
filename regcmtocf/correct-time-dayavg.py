@@ -5,13 +5,30 @@ from netCDF4 import Dataset as ncf
 import sys
 from datetime import date
 from calendar import monthrange
+import re
+
+inputfilename=sys.argv[1]
 
 refdate = date(1949,12,1)
-year1=int(sys.argv[2])
-year2=int(sys.argv[3])
-#print year1, year2
+try:
+    yearsre = re.compile('_([0-9]+)-([0-9]+)_')
+    m = yearsre.search(inputfilename)
+    if m:
+        year1=m.group(1)
+        year2=m.group(2)
 
-ff = ncf(sys.argv[1],'a')
+        if len(year1)>4:
+            year1=year1[:4]
+
+        if len(year2)>4:
+            year2=year2[:4]
+except:
+    year1=int(sys.argv[2])
+    year2=int(sys.argv[3])
+
+print year1, year2
+
+ff = ncf(inputfilename,'a')
 ff.createDimension('bnds',2)
 tb = ff.createVariable('time_bnds','d',('time','bnds'))
 t = ff.variables['time']

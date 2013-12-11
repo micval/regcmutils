@@ -4,12 +4,12 @@ institution:Charles University in Prague, Department of Meteorology and Environm
 contact:michal.belda@mff.cuni.cz
 comment:Euro-CORDEX RegCM4.2 0.44 deg CNRM-CERFACS-CNRM-CM5 forced
 creation_date:{TODAY}
-experiment_id:rcp45
+experiment_id:historical
 experiment:Historical run with GCM forcing
-driving_experiment:CNRM-CERFACS-CNRM-CM5, rcp45, r1i1p1
+driving_experiment:CNRM-CERFACS-CNRM-CM5, historical, r1i1p1
 driving_model_id:CNRM-CERFACS-CNRM-CM5
 driving_model_ensemble_member:r1i1p1
-driving_experiment_name:rcp45
+driving_experiment_name:historical
 frequency:{FREQUENCY}
 model_id:CUNI-REGCM4-2
 project_id:CORDEX

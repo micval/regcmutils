@@ -8,10 +8,10 @@ while read line ; do
     globalattr[$att]="$val"
 done < globalattributes.txt
 
-year1=1990
-year2=2008
+year1=2006
+year2=2100
 timespec=dayavg
-realm=STS
+realm=SRF
 domainname=${globalattr[CORDEX_domain]}
 gcmodel=${globalattr[driving_model_id]}
 cmip5experiment=${globalattr[experiment_id]}
@@ -26,23 +26,77 @@ outfrequency='day'
 cell_methods='time: mean'
 outprefix='esgf'
 
-dobufferzonecut=1
+dobufferzonecut=0
 docorrectatt=1
 docorrectvar=1
-docorrectdim=1
-dotimesplit=0
-dotimemerge=1
+docorrectdim=0
+dotimesplit=1
+dotimemerge=0
 
 xdimname='jx'
 ydimname='iy'
 
-decades=3
-dec_start[0]=1989
-dec_end[0]=1990
-dec_start[1]=1991
-dec_end[1]=2000
-dec_start[2]=2001
-dec_end[2]=2008
+#decades=10
+#dec_start[0]=1960
+#dec_end[0]=1960
+#dec_start[1]=1961
+#dec_end[1]=1965
+#dec_start[2]=1966
+#dec_end[2]=1970
+#dec_start[3]=1971
+#dec_end[3]=1975
+#dec_start[4]=1976
+#dec_end[4]=1980
+#dec_start[5]=1981
+#dec_end[5]=1985
+#dec_start[6]=1986
+#dec_end[6]=1990
+#dec_start[7]=1991
+#dec_end[7]=1995
+#dec_start[8]=1996
+#dec_end[8]=2000
+#dec_start[9]=2001
+#dec_end[9]=2005
+
+decades=19
+dec_start[0]=2006
+dec_end[0]=2010
+dec_start[1]=2011
+dec_end[1]=2015
+dec_start[2]=2016
+dec_end[2]=2020
+dec_start[3]=2021
+dec_end[3]=2025
+dec_start[4]=2026
+dec_end[4]=2030
+dec_start[5]=2031
+dec_end[5]=2035
+dec_start[6]=2036
+dec_end[6]=2040
+dec_start[7]=2041
+dec_end[7]=2045
+dec_start[8]=2046
+dec_end[8]=2050
+dec_start[9]=2051
+dec_end[9]=2055
+dec_start[10]=2056
+dec_end[10]=2060
+dec_start[11]=2061
+dec_end[11]=2065
+dec_start[12]=2066
+dec_end[12]=2070
+dec_start[13]=2071
+dec_end[13]=2075
+dec_start[14]=2076
+dec_end[14]=2080
+dec_start[15]=2081
+dec_end[15]=2085
+dec_start[16]=2086
+dec_end[16]=2090
+dec_start[17]=2091
+dec_end[17]=2095
+dec_start[18]=2096
+dec_end[18]=2100
 
 if [ ! -f vardefs.txt ]; then
     ln -s vardefs-$realm-$timespec.txt vardefs.txt
@@ -50,6 +104,7 @@ fi
 
 for infile in $@; do
     file=${infile##*/}
+    tmpfilename=$file
     if [ "$dobufferzonecut" == "1" ]; then
         jx=`./getncdim.py $infile $xdimname`
         iy=`./getncdim.py $infile $ydimname`
@@ -58,7 +113,10 @@ for infile in $@; do
 
         endx=`expr $jx - $bufferzonewidth - 1`
         endy=`expr $iy - $bufferzonewidth - 1`
-        ncks -d $xdimname,$startx,$endx -d $ydimname,$starty,$endy $infile tmp_$file
+        tmpfilename=tmp_$file
+        ncks -d $xdimname,$startx,$endx -d $ydimname,$starty,$endy $infile $tmpfilename
+    else
+        cp $infile $tmpfilename
     fi
     variable=`echo $file |cut -d. -f3`
 
@@ -73,13 +131,13 @@ for infile in $@; do
         postproc=`echo $vardef |cut -d: -f8`
 
         if [ "$varin" != "$varout" ]; then
-            ncrename -v $varin,$varout tmp_$file
+            ncrename -v $varin,$varout $tmpfilename
         fi
 
-        ncatted -a long_name,$varout,o,c,"$long_name" -a standard_name,$varout,o,c,"$standard_name" -a units,$varout,o,c,"$units" tmp_$file
+        ncatted -a long_name,$varout,o,c,"$long_name" -a standard_name,$varout,o,c,"$standard_name" -a units,$varout,o,c,"$units" $tmpfilename
         if [ "$postproc" != "" ]; then
-            cdo $postproc tmp_$file tmp2_$file
-            mv tmp2_$file tmp_$file
+            cdo $postproc $tmpfilename tmp2_$file
+            mv tmp2_$file $tmpfilename
         fi
     fi
 
@@ -87,7 +145,7 @@ for infile in $@; do
         while read atline; do
             attname=`echo $atline |cut -d: -f1`
             attval=`echo $atline |cut -d: -f2 |sed "s/{TODAY}/$today/; s/{FREQUENCY}/$outfrequency/"`
-            ncatted -a ${attname},global,o,c,"${attval}" tmp_$file
+            ncatted -a ${attname},global,o,c,"${attval}" $tmpfilename
         done <globalattributes.txt # end while read atline
     fi
 
@@ -100,25 +158,25 @@ for infile in $@; do
                 fi
                 my_years=$my_years"$y"
             done
-            cdo setreftime,1949-12-01,00:00 -settaxis,${dec_start[$i]}-01-01,12:00,1day -selyear,$my_years tmp_$file ${varout}_${domainname}_${gcmodel}_${cmip5experiment}_${cmip5ensemblemember}_${rcmodel}_${rcmversion}_${outfrequency}_${dec_start[$i]}0101-${dec_end[$i]}1231.nc
+            cdo setreftime,1949-12-01,00:00 -settaxis,${dec_start[$i]}-01-01,12:00,1day -selyear,$my_years $tmpfilename ${varout}_${domainname}_${gcmodel}_${cmip5experiment}_${cmip5ensemblemember}_${rcmodel}_${rcmversion}_${outfrequency}_${dec_start[$i]}0101-${dec_end[$i]}1231.nc
         done
     fi
 
     if [ "$docorrectdim" == "1" ]; then
-        ncrename -v xlon,lon -v xlat,lat -d $xdimname,xc -d $ydimname,yc -v rcm_map,Lambert_conformal tmp_$file
-        ncatted -a coordinates,$varout,o,c,"lon lat" tmp_$file
-        if [ `./checkncdim.py tmp_$file m2` == "True" ]; then
-            ./correct-m2-value.py tmp_$file
-            ncrename -v m2,height -d m2,height tmp_$file
-            ncatted -a long_name,m2,o,c,"height" tmp_$file
+        ncrename -v xlon,lon -v xlat,lat -d $xdimname,xc -d $ydimname,yc -v rcm_map,Lambert_conformal $tmpfilename
+        ncatted -a coordinates,$varout,o,c,"lon lat" $tmpfilename
+        if [ `./checkncdim.py $tmpfilename m2` == "True" ]; then
+            ./correct-m2-value.py $tmpfilename
+            ncrename -v m2,height -d m2,height $tmpfilename
+            ncatted -a long_name,m2,o,c,"height" $tmpfilename
         fi
     fi
 
     if [ "$docorrectvar" == "1" -a "$varin" != "$varout" ]; then
-        mv tmp_$file `echo tmp_$file | sed "s/$varin/$varout/"`
+        mv $tmpfilename `echo $tmpfilename | sed "s/$varin/$varout/"`
     fi
 done
 
 if [ "$dotimemerge" == "1" ]; then
-    ./domerge.py -s $year1 -e $year2 --mergedfilename_pattern="%s_${domainname}_${gcmodel}_${experiment}_${cmip5ensemblemember}_${rcmodel}_${rcmversion}_${outfrequency}_%4d0101-%4d1231.nc"
+    ./domerge.py -s $year1 -e $year2 --mergedfilename_pattern="%s_${domainname}_${gcmodel}_${experiment}_${cmip5ensemblemember}_${rcmodel}_${rcmversion}_${outfrequency}_%4d0101-%4d1231.nc" --infilename_patter="Euro-CORDEX-CMIP5_SRF.%4d%02d0100.%s.eccg.nc" --variables=snw --cdo_postproc=dayavg
 fi
