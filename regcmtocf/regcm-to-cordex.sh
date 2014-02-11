@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 
 declare -A globalattr
 while read line ; do
@@ -11,7 +11,7 @@ done < globalattributes.txt
 year1=2006
 year2=2100
 timespec=dayavg
-realm=SRF
+realm=STS
 domainname=${globalattr[CORDEX_domain]}
 gcmodel=${globalattr[driving_model_id]}
 cmip5experiment=${globalattr[experiment_id]}
@@ -22,19 +22,22 @@ experiment=${globalattr[experiment_id]}
 today=`date`
 bufferzonewidth=12
 
+outdomainfile=${domainname}_cdo.txt
+
 outfrequency='day'
 cell_methods='time: mean'
 outprefix='esgf'
 
-dobufferzonecut=0
+dobufferzonecut=1
+dointerpolate=1
 docorrectatt=1
 docorrectvar=1
 docorrectdim=0
-dotimesplit=1
-dotimemerge=0
+dotimesplit=0
+dotimemerge=1
 
-xdimname='jx'
-ydimname='iy'
+xdimname='x'
+ydimname='y'
 
 #decades=10
 #dec_start[0]=1960
@@ -120,6 +123,13 @@ for infile in $@; do
     fi
     variable=`echo $file |cut -d. -f3`
 
+    if [ "$dointerpolate" == "1" ]; then
+        tmpfilename2=`basename $tmpfilename .nc`.$domainname.nc
+        cdo remapbil,$outdomainfile $tmpfilename $tmpfilename2
+        rm $tmpfilename
+        tmpfilename=$tmpfilename2
+    fi
+
     if [ "$docorrectvar" == "1" ]; then
         vardef=`grep "^$variable" vardefs.txt`
         varin=`echo $vardef |cut -d: -f1`
@@ -165,11 +175,12 @@ for infile in $@; do
     if [ "$docorrectdim" == "1" ]; then
         ncrename -v xlon,lon -v xlat,lat -d $xdimname,xc -d $ydimname,yc -v rcm_map,Lambert_conformal $tmpfilename
         ncatted -a coordinates,$varout,o,c,"lon lat" $tmpfilename
-        if [ `./checkncdim.py $tmpfilename m2` == "True" ]; then
-            ./correct-m2-value.py $tmpfilename
-            ncrename -v m2,height -d m2,height $tmpfilename
-            ncatted -a long_name,m2,o,c,"height" $tmpfilename
-        fi
+    fi
+
+    if [ `./checkncdim.py $tmpfilename m2` == "True" ]; then
+        ./correct-m2-value.py $tmpfilename
+        ncrename -v m2,height -d m2,height $tmpfilename
+        ncatted -a long_name,height,o,c,"height" $tmpfilename
     fi
 
     if [ "$docorrectvar" == "1" -a "$varin" != "$varout" ]; then
@@ -178,5 +189,12 @@ for infile in $@; do
 done
 
 if [ "$dotimemerge" == "1" ]; then
-    ./domerge.py -s $year1 -e $year2 --mergedfilename_pattern="%s_${domainname}_${gcmodel}_${experiment}_${cmip5ensemblemember}_${rcmodel}_${rcmversion}_${outfrequency}_%4d0101-%4d1231.nc" --infilename_patter="Euro-CORDEX-CMIP5_SRF.%4d%02d0100.%s.eccg.nc" --variables=snw --cdo_postproc=dayavg
+    infilename_pattern="tmp_Euro-CORDEX-CMIP5_${realm}.%4d%02d0100.%s" 
+    if [ "$dointerpolate" == "1" ]; then
+        infilename_pattern=$infilename_pattern"."$domainname".nc"
+    else
+        infilename_pattern=$infilename_pattern.nc
+    fi
+
+    ./domerge.py -s $year1 -e $year2 --mergedfilename_pattern="%s_${domainname}_${gcmodel}_${experiment}_${cmip5ensemblemember}_${rcmodel}_${rcmversion}_${outfrequency}_%4d0101-%4d1231.nc" --variables=pr --infilename_pattern=$infilename_pattern # --cdo_postproc=dayavg 
 fi
