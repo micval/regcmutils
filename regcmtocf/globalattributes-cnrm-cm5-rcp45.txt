@@ -13,6 +13,6 @@ driving_experiment_name:rcp45
 frequency:{FREQUENCY}
 model_id:CUNI-REGCM4-2
 project_id:CORDEX
-CORDEX_domain:EUR-44
+CORDEX_domain:EUR-44i
 rcm_version_id:v1
 product:output
