@@ -15,7 +15,7 @@ from netcdftime import num2date
 
 from pputils import get_season_name_by_month
 
-parser = OptionParser(usage='Usage: %prog [ options ] precipitation_file output_prefix')
+parser = OptionParser(usage='Usage: %prog [ options ] data_file output_prefix')
 parser.add_option('--bgimage', dest='bgimage', help='background image (topography)')
 parser.add_option('--bzwidth', dest='bufferzone', type='int', help='buffer zone width')
 parser.add_option('--domain', dest='show_domain', help='display domain')
@@ -39,6 +39,7 @@ parser.add_option('--varname',dest='varname', help='Variable name')
 parser.add_option('--multiplicator',dest='multiplicator', help='Multiplicator', type='float')
 parser.add_option('--zlevel',dest='zlevel', help='Z-level', type='int')
 parser.add_option('','--labelbyseasons', dest='labelbyseasons', action='store_true', help='', default=False)
+parser.add_option('','--reversecmap', dest='reversecmap', action='store_true', help='', default=False)
 
 parser.set_defaults(
         bgimage='color_etopo1_ice_low.tif',
@@ -165,9 +166,14 @@ for t in range(time1,time2):
         colors = colors_sum[options.show_domain]
         CS = m.contourf(x,y,data, alpha=options.data_alpha, levels=levels, colors=colors, zorder=zorder, extend='max', norm=vardatanorm)
     else:
+        if options.reversecmap:
+            cmap=cm.RdBu
+        else:
+            cmap=cm.RdBu_r
+
         CS = m.contourf(x,y,data, alpha=options.data_alpha,
 #                cmap=cm.RdBu,
-                cmap=cm.gist_rainbow,
+                cmap=cmap,
                 zorder=zorder, extend='max',
                 norm=vardatanorm,
                 levels=levels_ts,
